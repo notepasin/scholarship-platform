@@ -1,0 +1,27 @@
+✔ catalog is explicitly fictional and browseable without authentication (6.622224ms)
+✔ anonymous write is rejected with 401 (2.658084ms)
+✔ cross-origin write is rejected before database mutation (1.661515ms)
+✔ invalid JSON, unsupported types and oversized payloads are rejected (5.799524ms)
+✔ GPA bounds, missing GPA, HTML input and fractional study year fail validation (0.610205ms)
+✔ eligibility rejects expired scholarship, missing profile and low GPA (0.840137ms)
+✔ complete happy path persists profile, saved item, checklist and submitted application (51.903274ms)
+✔ retries create neither duplicate bookmarks nor duplicate applications (13.119051ms)
+✔ incomplete checklist and missing acknowledgement prevent submission (13.70755ms)
+✔ owner isolation prevents reading and editing another user checklist (9.893307ms)
+✔ SQL-looking names are parameter values and cannot drop tables (3.18207ms)
+✔ deleting saved scholarship cascades checklist (7.37464ms)
+✔ account deletion is explicit and cascades all owned business records (7.67051ms)
+✔ partner success strips student names and emails; records real outcome metadata (2.553479ms)
+✔ upstream 503 is reported honestly; application system remains available (11.220805ms)
+✔ malformed upstream response and network failure never become successful integration (1.25398ms)
+✔ persistent per-user write limit returns 429 (45.868436ms)
+✔ partner bearer token is sent server-to-server and never appears in result or database log (3.411796ms)
+✔ submitted application locks document checklist on the server (11.008671ms)
+ℹ tests 19
+ℹ suites 0
+ℹ pass 19
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 346.756339

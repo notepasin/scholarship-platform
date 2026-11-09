@@ -7,7 +7,7 @@ const require=createRequire(import.meta.url),wranglerRequire=createRequire(requi
 const {Miniflare}=wranglerRequire('miniflare');
 function walk(dir){return readdirSync(dir,{withFileTypes:true}).flatMap(e=>e.isDirectory()?walk(dir+'/'+e.name):e.name.endsWith('.js')?[resolve(dir,e.name)]:[]);}
 const entry=resolve('dist/server/index.js');const modules=[entry,...walk('dist/server').filter(p=>p!==entry)].map(path=>({type:'ESModule',path}));
-const mf=new Miniflare({modules,modulesRoot:resolve('dist/server'),compatibilityDate:'2026-05-15',compatibilityFlags:['nodejs_compat'],d1Databases:{DB:'00000000-0000-4000-8000-000000000000'},bindings:{AUTH_PEPPER:'smoke-only-not-a-production-secret-00000000',PARTNER_API_KEY:'smoke-only-partner-key-00000000000000000',REGISTRATION_ENABLED:'true'},cf:false});
+const mf=new Miniflare({modules,modulesRoot:resolve('dist/server'),compatibilityDate:'2026-05-15',compatibilityFlags:['nodejs_compat'],d1Databases:{DB:'00000000-0000-4000-8000-000000000000'},bindings:{AUTH_PEPPER:'smoke-only-not-a-production-secret-00000000',PARTNER_API_KEY:'smoke-only-partner-key-00000000000000000',ENROLLMENT_BEARER_TOKEN:'smoke-only-enrollment-token',REGISTRATION_ENABLED:'true'},cf:false,outboundService:async()=>Response.json({success:true,data:[{course_code:'CS101',course_title:'Fixture course',status:'ENROLLED',section_number:'SEC01'}]})});
 const observations=[];
 try{
  const db=await mf.getD1Database('DB');
@@ -20,6 +20,7 @@ try{
  }
  assert.equal((await call('auth/register','POST',{username:'smoke_student',password:'synthetic-password-2026-only'})).status,201);
  assert.equal((await call('profile','POST',{full_name:'นักศึกษา ทดสอบ',faculty:'Information Technology',major:'Software Engineering',study_year:2,gpa:3.5})).status,200);
+ const peer=await call('integration/enrollment','POST',{});assert.equal(peer.status,200);assert.equal(peer.data.courses[0].course_code,'CS101');
  assert.equal((await call('saved','POST',{scholarship_id:'asean-2026'})).status,201);
  const state=(await call('state')).data;assert.equal(state.saved.length,1);
  for(const c of state.checks)assert.equal((await call('checklist','PATCH',{id:c.id,completed:true})).status,200);

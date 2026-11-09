@@ -1,149 +1,153 @@
-# Scholarship Hub — Group 15
+# Scholarship Hub — Cloudflare deployment owned by Group 15
 
-ระบบใหม่สำหรับวิชา Platform Development: ค้นหาทุน บันทึกทุน ตรวจ GPA เบื้องต้น เตรียมเช็กลิสต์เอกสาร ส่งใบสมัคร และทดสอบ API ของ Team 03
+โค้ดชุดนี้ใช้บัญชีและฐานข้อมูลของโครงงานเอง ไม่มีโฟลเดอร์ `.openai` และไม่ใช้บัญชีล็อกอินจากโฮสต์เดิม
 
-**ข้อมูลทุนและผู้สมัครตัวอย่างเป็นข้อมูลสมมติ ระบบยังไม่ใช่ช่องทางสมัครทุนจริง**
+## ตอนนี้ทำอะไรต่อจากการขึ้น GitHub แล้ว
 
-## เริ่มจากศูนย์บนเครื่องของคุณ
-
-1. ติดตั้ง Node.js รุ่นที่ตรงกับ `engines` ใน package.json (ชุดนี้ทดสอบด้วย Node 24), Git และ VS Code
-2. แตก ZIP โค้ด เปิดโฟลเดอร์ที่มี `package.json` ผ่าน VS Code → File → Open Folder
-3. เปิด Terminal → New Terminal แล้วรันทีละคำสั่ง:
+1. สร้าง branch `feature/cloudflare-deploy` ใน repo เดิม
+2. ใช้ไฟล์ `cloudflare-update.patch` จากชุดอัปเดต โดยตรวจ `git apply --check` ก่อน อย่าเขียนทับทั้ง repo หรือย้าย `.git`
+3. ติดตั้ง Node.js 24 ขึ้นไป แล้วเปิด Terminal ที่โฟลเดอร์ซึ่งมี `package.json`
+4. รัน:
 
 ```bash
 npm install
-npm run db:local
+npm run setup
 npm run dev
 ```
 
-เปิด URL ที่ Terminal แสดง ปกติ `http://localhost:5173` การเตรียมฐานข้อมูลครั้งแรกจะ build และใช้ SQL ใน `drizzle/` กับฐานข้อมูลในเครื่อง หากเคยเตรียมแล้ว ไม่ต้องรัน `db:local` ทุกครั้ง
+เปิด URL ที่ Terminal แสดง ปกติ `http://localhost:5173` แล้วไปหน้า `/login` สร้างบัญชีทดสอบ ชื่อบัญชีใช้ a-z, ตัวเลข, `_` จำนวน 3–32 ตัว รหัสผ่านอย่างน้อย 12 ตัวอักษร ใช้รหัสเฉพาะสำหรับโครงงาน
 
-**การลงชื่อเข้าใช้ในเครื่อง:** starter จำลองบัญชีสำหรับ loopback development เท่านั้น กดลงชื่อเข้าใช้จากหน้าเว็บ จะเป็นบัญชีทดสอบ `local_seedy` ข้อมูลทดสอบในเครื่องแยกจากข้อมูลบน cloud และบัญชีจำลองไม่ถูกนำไปใช้ใน production
+`setup` สร้าง `.dev.vars` พร้อมค่า random `AUTH_PEPPER` และ `PARTNER_API_KEY` โดยไม่พิมพ์ค่าออกมา และ apply migrations ให้ D1 **ในเครื่อง** หากไฟล์มีอยู่แล้วจะเก็บค่าเดิม ห้ามเปลี่ยน pepper หลังสร้างบัญชีโดยไม่วางแผนรีเซ็ตรหัสผ่าน ห้าม commit `.dev.vars` ฐานข้อมูล local ชุดใหม่เก็บใน `.wrangler/standalone-state` แยกจากฐานข้อมูล local ของชุดเดิม
+
+หากมี `pnpm-lock.yaml` และทีมเลือกใช้ pnpm ให้ใช้ `pnpm install --frozen-lockfile` และ `pnpm run ...` แทน เลือก package manager เดียวเพื่อไม่สร้าง lockfile หลายแบบ
+
+## ทดสอบเส้นทางหลักในเครื่อง
+
+สร้างบัญชี → ข้อมูลนักศึกษา → ใส่ข้อมูลสมมติ → บันทึก → ค้นหาทุน ASEAN → บันทึกทุน → เปิดรายละเอียด → ติ๊กเอกสาร 3 รายการ → รับทราบการใช้ข้อมูล → ส่งใบสมัคร → ดูเลข SCH-… → refresh → ออกจากระบบแล้วล็อกอินใหม่ → ข้อมูลยังอยู่
+
+บัญชีนี้เป็นบัญชีสำหรับโครงงาน ไม่ได้ยืนยันตัวตนนักศึกษาจริง ข้อมูลทุนเป็นข้อมูลสมมติ ไม่มีการอนุมัติทุน จ่ายเงิน หรือรับอัปโหลดเอกสารจริง
 
 ```bash
 npm test
 npm run typecheck
 npm run build
+node scripts/smoke-worker.mjs
 ```
 
-หากใช้ pnpm ให้ใช้ `pnpm install` กับ `pnpm-lock.yaml` แทน ไม่ต้องผสม lockfile หลายตัวในทีม
+## บันทึกงานและให้เพื่อนทำต่อ
 
-## Happy Path สำหรับเดโม
+หลังทดสอบแล้ว:
 
-1. เปิดเว็บออนไลน์และลงชื่อเข้าใช้ผ่านบัญชีที่มีสิทธิ์เข้า Site
-2. ข้อมูลนักศึกษา → ใส่ข้อมูลสมมติ → บันทึกโปรไฟล์ (GPA 3.50)
-3. ค้นหาทุน → ASEAN Scholarship Program → บันทึกทุน
-4. เปิดรายละเอียด → ติ๊กเช็กลิสต์ 3 รายการที่เตรียมพร้อม
-5. อ่านการใช้ข้อมูลและรับทราบ → ส่งใบสมัคร
-6. ใบสมัครของฉัน → มีเลข `SCH-...` และสถานะส่งใบสมัครแล้ว
-7. Refresh → ข้อมูลยังอยู่ในฐานข้อมูล
-8. การเชื่อมต่อระบบ → ทดสอบเชื่อมต่อจริง → ตรวจ HTTP และ response → ดาวน์โหลดผล
+```bash
+git add .
+git commit -m "Make scholarship platform deployable on our Cloudflare account"
+git push -u origin feature/cloudflare-deploy
+```
 
-เช็กลิสต์เป็นการระบุความพร้อมด้วยตนเอง **ไม่มีการอัปโหลดหรือการตรวจเอกสารจริง** สถานะส่งใบสมัครไม่ใช่การอนุมัติทุน
+เปิด Pull Request ตรวจแล้วค่อย merge เข้า main เพื่อน clone/pull แล้วรัน `npm install`, `npm run setup`, `npm run dev` ในเครื่องตนเอง แต่ละเครื่องมี D1 local และ secrets ของตนเอง
 
-## เทคโนโลยีและความต่างจากเอกสารเก่า
+## Deploy ขึ้น Cloudflare ของทีม
 
-- UI: React / TypeScript บน Vinext, CSS และ Lucide icons
-- Backend: API routes รันบน Cloudflare Workers ผ่าน Sites
-- ฐานข้อมูล: Cloudflare D1 / SQLite และ Drizzle migrations
-- Identity: Sign in with ChatGPT จาก hosting platform ไม่มีตารางเก็บรหัสผ่าน
-- Integration: fixed allowlisted URL ของ Team 03 จากเอกสารเดิม
+### 1. ลงชื่อเข้าใช้ Cloudflare จากเครื่องของคุณ
 
-เอกสารเก่าระบุ Supabase PostgreSQL ชุดนี้เป็น implementation ใหม่ ใช้ D1 เพื่อให้มีฐานข้อมูล cloud ที่ provision ได้ใน workflow นี้ **ไม่ได้เชื่อม ย้าย หรือนำข้อมูลจาก Supabase เก่ามาใช้** ต้องแก้เอกสารนำเสนอให้ตรง implementation ใหม่นี้
+```bash
+npm run cf:login
+```
 
-## โครงสร้างโค้ดที่ต้องอธิบายได้
+ทำขั้นตอน sign-in ใน browser ของคุณ ไม่ต้องส่ง password, token หรือ secrets มาทางแชท
+
+### 2. สร้าง D1 ของทีม
+
+```bash
+npm run cf:database
+```
+
+คำสั่งสร้างฐานข้อมูลชื่อ `scholarship-db` ให้คัดลอก `database_id` ที่ได้ ไปแทน UUID ตัวอย่างใน `wrangler.jsonc` ตรง `d1_databases[0].database_id` ชื่อ binding ต้องยังเป็น `DB`
+
+หากมีฐานข้อมูลชื่อนี้แล้ว ใช้ฐานข้อมูลที่ยืนยันว่าเป็นของโครงงานและมี schema ที่ถูกต้อง อย่าลบหรือทับฐานข้อมูลของโครงงานอื่น
+
+### 3. Deploy ครั้งแรก
+
+```bash
+npm run deploy
+```
+
+คำสั่งนี้ตรวจ database ID, apply migrations **บน cloud**, build แล้ว deploy Worker/หน้าเว็บให้ ได้ URL จริงจาก Terminal เช่นรูปแบบ `https://<worker-name>.<account-subdomain>.workers.dev` ซึ่งไม่มีคำว่า chatgpt
+
+เว็บไซต์จะเปิดได้ แต่บัญชีล็อกอินยังต้องตั้ง secret ในขั้นถัดไปก่อนใช้
+
+### 4. ตั้งค่าลับบน cloud
+
+เปิดไฟล์ `.dev.vars` ในเครื่องของคุณเพื่อดูค่า แล้วรันทีละคำสั่งและวางเฉพาะค่าที่ CLI ขอ:
+
+```bash
+npx wrangler secret put AUTH_PEPPER --config wrangler.jsonc
+npx wrangler secret put PARTNER_API_KEY --config wrangler.jsonc
+```
+
+ค่า AUTH_PEPPER ต้องยาวอย่างน้อย 32 ตัว เก็บไว้ใน password manager ของทีม และไม่ใส่ใน `wrangler.jsonc` หรือ Git
+
+หากได้รับ Bearer token จาก Team 03 แล้ว:
+
+```bash
+npx wrangler secret put ENROLLMENT_BEARER_TOKEN --config wrangler.jsonc
+```
+
+การแก้ secrets จะสร้าง worker version ใหม่ตามพฤติกรรมของ Wrangler ข้อมูล local กับ cloud แยกกัน ต้องสร้างบัญชีทดสอบใหม่บนเว็บออนไลน์ด้วย
+
+### 5. ทดสอบออนไลน์กับทีมจริง
+
+ทดสอบ login → save → checklist → submit → refresh/logout/login และให้สมาชิกอีกบัญชีตรวจว่าไม่เห็นข้อมูลของกันและกัน จากนั้นประสาน Team 03 และกลุ่มที่ใช้ API ของเราให้ทดสอบพร้อมกัน
+
+## API ของเราให้กลุ่มอื่นเชื่อม
+
+### รายการทุนสาธารณะ
+
+`GET /api/scholarships` ส่งเฉพาะทุนสมมติ 4 รายการ ไม่มีข้อมูลนักศึกษา
+
+### API สำหรับกลุ่มคู่เชื่อมพร้อมหลักฐาน
+
+`GET /api/partner/scholarships` ใช้ header `Authorization: Bearer <PARTNER_API_KEY>` เรียกจาก Backend ของเพื่อน ไม่ฝัง key ในหน้าเว็บสาธารณะ
+
+ผลลัพธ์มี `provider`, `request_id`, `generated_at` และ `data` ฝั่งเราบันทึก request_id เดียวกันในตาราง `provider_access_logs` ให้เทียบหลักฐานสองฝั่งได้ ค่าคีย์แชร์กับกลุ่มที่ได้รับอนุญาตผ่านช่องทางส่วนตัวของทีม ไม่ใส่ใน screenshot หรือ Git
+
+ตัวอย่าง (แทน origin และ environment variable ด้วยค่าบนเครื่องของคู่เชื่อม):
+
+```bash
+curl "https://YOUR_WORKER.YOUR_SUBDOMAIN.workers.dev/api/partner/scholarships" -H "Authorization: Bearer YOUR_PARTNER_KEY"
+```
+
+`YOUR_WORKER...` เป็น placeholder ไม่ใช่ URL ที่ deploy ให้แล้ว มี script `scripts/test-partner.mjs` สำหรับบันทึก response ลงไฟล์ โดยไม่บันทึก key อ่าน `docs/API.md`
+
+## การเรียก API ของ Team 03
+
+`POST /api/integration/enrollment` จะเรียก endpoint Enrollment ที่ระบุในเอกสารเดิม ใช้ student_id=1 เพื่อทดสอบเท่านั้น ปลายทางเคยตอบ HTTP 401 ว่าต้องใช้ Bearer token โค้ดรองรับ secret แล้ว แต่ **ยังไม่ถือว่าเชื่อมสำเร็จ** จนกว่าจะใส่ token ที่ได้รับอนุญาตและทดสอบจริง
+
+ไม่ได้ต่อ Team 04 หรือสร้าง Webhook/HMAC/background queue ในชุดนี้
+
+## โครงสร้างหลัก
 
 | ไฟล์ | หน้าที่ |
 |---|---|
-| `app/scholarship-app.tsx` | หน้าเว็บ เมนู ฟอร์ม และการเรียก API |
-| `app/globals.css` | สี รูปแบบ และ responsive layout |
-| `app/page.tsx` | อ่าน identity ที่ platform ยืนยันแล้วและส่งให้ UI |
-| `app/api/[...path]/route.ts` | รับ HTTP request ส่งต่อ service |
-| `lib/service.mjs` | ตรวจเจ้าของข้อมูล CRUD การสมัคร และบันทึกผล integration |
-| `lib/domain.mjs` | ตรวจ input, GPA, JSON/body size และ Origin |
-| `lib/catalog.mjs` | ทุนสมมติ 4 ทุน / ข้อกำหนดเอกสาร |
-| `lib/partner.mjs` | เรียก Team 03, timeout, ตรวจ response และตัดชื่อ/อีเมลออก |
-| `db/schema.ts` | schema 10 ตาราง |
-| `drizzle/` | SQL schema migrations |
-| `tests/api.test.mjs` | automated tests ใช้ service จริงกับ SQLite ในหน่วยความจำ |
-| `worker/index.ts` | worker entrypoint และ security headers |
+| app/scholarship-app.tsx | หน้าเว็บและคำขอไป API |
+| app/login/login-form.tsx | ฟอร์มสมัครบัญชี / ล็อกอิน |
+| app/auth.ts | อ่าน session ที่ยืนยันจากฐานข้อมูลแล้ว |
+| lib/auth.mjs | hash password, rate limit, sessions และ cookies |
+| lib/service.mjs | ข้อมูลโปรไฟล์ บันทึกทุน เช็กลิสต์ และใบสมัคร |
+| lib/provider.mjs | API read-only สำหรับกลุ่มคู่เชื่อม |
+| lib/partner.mjs | เรียก Team 03 แบบ server-to-server |
+| db/schema.ts / drizzle | schema และ migrations |
+| wrangler.jsonc | Cloudflare Worker + D1 ของทีม |
+| scripts/setup.mjs / deploy.mjs | เตรียม local และ deploy ผ่านบัญชีของทีม |
 
-## ฐานข้อมูล
+## ขอบเขตความปลอดภัย
 
-คงแนวคิด 7 ตารางจากเอกสาร: users, student_profiles, scholarships, scholarship_requirements, scholarship_eligibility, saved_scholarships, checklist_items
+ใช้ opaque sessions ที่เซิร์ฟเวอร์เก็บเฉพาะแฮช Cookie เป็น HttpOnly/SameSite=Lax และ Secure บน HTTPS; ตรวจ Origin บน write; ตรวจเจ้าของข้อมูล; bound SQL; input/body/rate limits; partner URL allowlist
 
-ปรับ student_profiles เป็น 1:1 กับ users และไม่เก็บ password เพิ่ม applications, integration_logs และ rate_limits เพื่อรองรับ flow ใหม่
+บัญชีเก็บ salted password hash กับ server-side pepper ไม่เก็บ plaintext password การ hash ใช้ PBKDF2-SHA256 100,000 iterations ตามขีดจำกัด per-call ของ runtime พร้อม pepper นี่เป็นระบบสาธิต ยังไม่มี MFA, password reset, email verification, account recovery หรือการตรวจช่องโหว่แบบเต็ม ดู SECURITY.md ก่อนใช้ข้อมูลจริง
 
-```mermaid
-erDiagram
-  users ||--o| student_profiles : owns
-  users ||--o{ saved_scholarships : saves
-  users ||--o{ applications : submits
-  users ||--o{ integration_logs : tests
-  scholarships ||--o{ saved_scholarships : saved_as
-  scholarships ||--o{ applications : receives
-  scholarships ||--o{ scholarship_requirements : requires
-  scholarships ||--o{ scholarship_eligibility : defines
-  saved_scholarships ||--o{ checklist_items : tracks
-  scholarship_requirements ||--o{ checklist_items : checked_as
-```
+## การใช้ AI และการประเมิน
 
-## GitHub: ทำอย่างไรเมื่อมีโค้ดแล้ว
+AI ช่วยสร้างและแก้โค้ด ทดสอบ และเอกสาร ทีมต้องอธิบาย source, ทำ minor modification, deploy และบันทึกงานของแต่ละคนจริงตามโจทย์อาจารย์ ไม่สร้าง commit หรือผลทดสอบย้อนหลัง
 
-สร้าง repository ว่างในบัญชี GitHub ของทีม ไม่ต้องเพิ่ม README จากเว็บ เพราะมีในชุดนี้แล้ว จาก Terminal ในโฟลเดอร์โค้ด:
-
-```bash
-git init
-git add .
-git commit -m "Add working scholarship platform with API and tests"
-git branch -M main
-git remote add origin https://github.com/YOUR_ACCOUNT/YOUR_REPOSITORY.git
-git push -u origin main
-```
-
-แทน `YOUR_ACCOUNT/YOUR_REPOSITORY` ด้วย repository จริง ถ้ามี `.git` หรือ origin อยู่แล้วให้ใช้ `git status` และ `git remote -v` ตรวจของเดิมก่อน ห้ามทับ remote ที่ต้องเก็บไว้
-
-Git อาจให้ลงชื่อเข้าใช้ผ่าน browser/credential manager ห้ามส่ง password/token ในแชท โค้ดชุดนี้ยังไม่ได้ push เข้า GitHub ของทีมโดยอัตโนมัติ
-
-สมาชิกแต่ละคนควรแก้ส่วนที่ตนรับผิดชอบ ทดสอบ และ commit ด้วยบัญชีจริงของตน ไม่สร้างประวัติการมีส่วนร่วมย้อนหลัง
-
-## Cloud deployment และสิทธิ์เข้าถึง
-
-`.openai/hosting.json` ผูก Site ที่สร้างในรอบนี้ พร้อม binding DB และ source ที่ deploy จริง Sites จะ provision D1 และ apply migrations ตอน publish
-
-Site ใหม่เริ่มเป็นส่วนตัว ลิงก์ที่ออนไลน์แล้ว **ไม่ได้หมายความว่าอาจารย์และเพื่อนทุกคนเข้าถึงได้** ต้องกำหนด audience/สิทธิ์ก่อนประเมิน และทดลองจากบัญชีของผู้ประเมินจริง
-
-หากย้ายไป Cloudflare/Vercel/hosting ของทีม ต้องตั้งค่า deploy และระบบยืนยันตัวตนของปลายทางให้ครบ **ห้ามรับ header `oai-authenticated-user-id` จาก client ทั่วไปเป็นหลักฐานยืนยันตัวตน** header นี้เชื่อถือได้เฉพาะเมื่อมาจาก dispatch ที่ platform ควบคุม การ deploy Worker นี้แบบเปลือย ๆ โดยไม่มีชั้น authentication ไม่ถือว่าปลอดภัย
-
-ถ้าแก้ข้อความเล็กน้อย เช่นคำโปรยใน `app/scholarship-app.tsx`: แก้ → `npm test` → `npm run typecheck` → `npm run build` → commit/push → publish เวอร์ชันใหม่ แล้วตรวจลิงก์ออนไลน์
-
-## สิ่งที่ยังต้องทำก่อนส่ง
-
-- ทดสอบ Team 03 จาก production ให้ได้จริงและประสานให้คู่เชื่อมเปิดระบบระหว่างประเมิน
-- push source ไป GitHub ของทีม
-- ตรวจสิทธิ์เข้าชม Site ของอาจารย์และสมาชิก
-- ให้สมาชิกทุกคนทดสอบ browser happy path ด้วยตนเอง
-- เติมรายชื่อผู้รับผิดชอบและผล manual test จริงใน `docs/TEAM_AND_AI.md` และ `docs/TESTING.md`
-- อัปเดต diagram, deployment URL และฐานข้อมูลในรายงานให้ตรง implementation
-- ใช้ข้อมูลสมมติในการเดโม ก่อนใช้ข้อมูลจริงต้องกำหนดนโยบาย/ผู้รับผิดชอบและจัดการข้อกำหนดส่วนบุคคลให้ครบ
-
-## เอกสารเพิ่มเติม
-
-- [API และตัวอย่างคำขอ](docs/API.md)
-- [สถาปัตยกรรมและการออกแบบ](docs/ARCHITECTURE.md)
-- [Security และข้อมูลส่วนบุคคล](docs/SECURITY.md)
-- [Testing และขอบเขตผลทดสอบ](docs/TESTING.md)
-- [ทีมและการใช้ AI](docs/TEAM_AND_AI.md)
-- [หลักฐานล่าสุด](docs/EVIDENCE.md)
-
-## Team 03 ใช้ Bearer token
-
-ระหว่างสร้างชุดนี้ endpoint ตอบ HTTP 401 และแจ้งว่าต้องใช้ Authorization แบบ Bearer ให้ขอ token ที่อนุญาตใช้จริงจาก Team 03 แล้วตั้งเป็น server-only runtime secret ชื่อ `ENROLLMENT_BEARER_TOKEN` บน hosting
-
-ในเครื่อง สร้าง `.dev.vars` ที่ไม่ขึ้น Git:
-
-```text
-ENROLLMENT_BEARER_TOKEN="ใส่ token จริงเฉพาะในเครื่องของคุณ"
-```
-
-อย่าส่ง token ผ่านแชทหรือ commit ลง GitHub เมื่อยังไม่มี token ระบบทุนส่วนอื่นใช้ได้ แต่ยังไม่สามารถนับ cross-group integration ว่าสำเร็จ
+อ่าน `docs/TESTING.md`, `docs/SECURITY.md`, `docs/API.md` และ `docs/DEPLOY_CHECKLIST.md`

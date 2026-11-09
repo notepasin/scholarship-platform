@@ -1,30 +1,15 @@
+import {database} from './helpers.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
-import { readFileSync } from 'node:fs';
+import { readFileSync,readdirSync } from 'node:fs';
 import { handleApi } from '../lib/service.mjs';
 import { validateProfile, checkEligibility } from '../lib/domain.mjs';
 import { fetchEnrollment } from '../lib/partner.mjs';
 import { catalog } from '../lib/catalog.mjs';
 const alice = { userId: 'test-alice' }, bob = { userId: 'test-bob' };
 const profile = { full_name: 'นักศึกษา ทดสอบ', faculty: 'Information Technology', major: 'Software Engineering', study_year: 2, gpa: 3.5 };
-function database() {
-    const sqlite = new DatabaseSync(':memory:');
-    sqlite.exec('PRAGMA foreign_keys=ON');
-    sqlite.exec(readFileSync(new URL('../drizzle/0000_smiling_mandarin.sql', import.meta.url), 'utf8'));
-    const db = { prepare(sql) { let args = []; return { bind(...a) { args = a; return this; }, async first() { return sqlite.prepare(sql).get(...args) ?? null; }, async all() { return { results: sqlite.prepare(sql).all(...args) }; }, async run() { return { meta: sqlite.prepare(sql).run(...args) }; } }; }, async batch(statements) { sqlite.exec('BEGIN'); try {
-            const r = [];
-            for (const s of statements)
-                r.push(await s.run());
-            sqlite.exec('COMMIT');
-            return r;
-        }
-        catch (e) {
-            sqlite.exec('ROLLBACK');
-            throw e;
-        } } };
-    return { db, sqlite };
-}
+
 async function request(db, path, method = 'GET', body, user = alice, options = {}) {
     const headers = { 'Content-Type': 'application/json', Origin: 'https://test.local', ...options.headers };
     const req = new Request(`https://test.local/api/${path}`, { method, headers, ...(body !== undefined ? { body: typeof body === 'string' ? body : JSON.stringify(body) } : {}) });

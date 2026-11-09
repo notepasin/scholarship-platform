@@ -12,3 +12,14 @@ export const checklist = sqliteTable('checklist_items', { id: text('id').primary
 export const applications = sqliteTable('applications', { id: text('id').primaryKey(), userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }), scholarshipId: text('scholarship_id').notNull().references(() => scholarships.id), status: text('status').notNull(), consentVersion: text('consent_version').notNull(), createdAt: text('created_at').notNull() }, t => [uniqueIndex('one_application_per_user_scholarship').on(t.userId, t.scholarshipId)]);
 export const integrationLogs = sqliteTable('integration_logs', { id: text('id').primaryKey(), userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }), partner: text('partner').notNull(), status: text('status').notNull(), httpStatus: integer('http_status'), durationMs: integer('duration_ms').notNull(), courseCount: integer('course_count').notNull(), createdAt: text('created_at').notNull() });
 export const rateLimits = sqliteTable('rate_limits', { key: text('key').primaryKey(), hits: integer('hits').notNull(), expiresAt: integer('expires_at').notNull() });
+
+// Accounts contain salted password hashes; users remain the business-data owner table.
+export const authAccounts=sqliteTable('auth_accounts',{
+ id:text('id').primaryKey(),username:text('username').notNull().unique(),passwordHash:text('password_hash').notNull(),salt:text('salt').notNull(),iterations:integer('iterations').notNull(),createdAt:text('created_at').notNull(),
+});
+export const authSessions=sqliteTable('auth_sessions',{
+ tokenHash:text('token_hash').primaryKey(),accountId:text('account_id').notNull().references(()=>authAccounts.id,{onDelete:'cascade'}),expiresAt:integer('expires_at').notNull(),createdAt:text('created_at').notNull(),
+});
+export const providerLogs=sqliteTable('provider_access_logs',{
+ id:text('id').primaryKey(),partner:text('partner').notNull(),method:text('method').notNull(),path:text('path').notNull(),createdAt:text('created_at').notNull(),
+});

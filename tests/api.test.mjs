@@ -1,30 +1,15 @@
+import {database} from './helpers.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
-import { readFileSync } from 'node:fs';
+import { readFileSync,readdirSync } from 'node:fs';
 import { handleApi } from '../lib/service.mjs';
 import { validateProfile, checkEligibility } from '../lib/domain.mjs';
 import { fetchEnrollment } from '../lib/partner.mjs';
 import { catalog } from '../lib/catalog.mjs';
 const alice = { userId: 'test-alice' }, bob = { userId: 'test-bob' };
 const profile = { full_name: 'นักศึกษา ทดสอบ', faculty: 'Information Technology', major: 'Software Engineering', study_year: 2, gpa: 3.5 };
-function database() {
-    const sqlite = new DatabaseSync(':memory:');
-    sqlite.exec('PRAGMA foreign_keys=ON');
-    sqlite.exec(readFileSync(new URL('../drizzle/0000_smiling_mandarin.sql', import.meta.url), 'utf8'));
-    const db = { prepare(sql) { let args = []; return { bind(...a) { args = a; return this; }, async first() { return sqlite.prepare(sql).get(...args) ?? null; }, async all() { return { results: sqlite.prepare(sql).all(...args) }; }, async run() { return { meta: sqlite.prepare(sql).run(...args) }; } }; }, async batch(statements) { sqlite.exec('BEGIN'); try {
-            const r = [];
-            for (const s of statements)
-                r.push(await s.run());
-            sqlite.exec('COMMIT');
-            return r;
-        }
-        catch (e) {
-            sqlite.exec('ROLLBACK');
-            throw e;
-        } } };
-    return { db, sqlite };
-}
+
 async function request(db, path, method = 'GET', body, user = alice, options = {}) {
     const headers = { 'Content-Type': 'application/json', Origin: 'https://test.local', ...options.headers };
     const req = new Request(`https://test.local/api/${path}`, { method, headers, ...(body !== undefined ? { body: typeof body === 'string' ? body : JSON.stringify(body) } : {}) });
@@ -54,4 +39,5 @@ test('malformed upstream response and network failure never become successful in
 test('persistent per-user write limit returns 429', async () => { const { db } = database(); let last; for (let i = 0; i < 41; i++)
     last = await request(db, 'profile', 'POST', profile); assert.equal(last.status, 429); });
 test('partner bearer token is sent server-to-server and never appears in result or database log', async () => { const { db, sqlite } = database(); let auth; const r = await request(db, 'integration/enrollment', 'POST', {}, alice, { partnerToken: 'test-token-not-real', fetcher: async (url, options) => { auth = options.headers.Authorization; return Response.json({ success: true, data: [] }); } }); assert.equal(auth, 'Bearer test-token-not-real'); assert.equal(r.status, 200); assert.doesNotMatch(JSON.stringify(r.body), /test-token-not-real/); assert.doesNotMatch(JSON.stringify(sqlite.prepare('SELECT * FROM integration_logs').all()), /test-token-not-real/); });
+test('partner request uses Cloudflare-compatible manual redirects and never follows them with the token', async () => { let redirect; const result = await fetchEnrollment(async (url, options) => { redirect = options.redirect; return new Response(null, { status: 302, headers: { Location: 'https://other.example/' } }); }, 'test-token-not-real'); assert.equal(redirect, 'manual'); assert.equal(result.status, 'unavailable'); assert.equal(result.http_status, 302); assert.match(result.message, /token/); });
 test('submitted application locks document checklist on the server', async () => { const { db } = database(); await ready(db); await request(db, 'applications', 'POST', { scholarship_id: catalog[0].id, acknowledged: true }); const c = (await request(db, 'state')).body.checks[0]; assert.equal((await request(db, 'checklist', 'PATCH', { id: c.id, completed: false })).status, 409); });

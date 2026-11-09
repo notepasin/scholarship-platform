@@ -1,27 +1,37 @@
-✔ catalog is explicitly fictional and browseable without authentication (6.622224ms)
-✔ anonymous write is rejected with 401 (2.658084ms)
-✔ cross-origin write is rejected before database mutation (1.661515ms)
-✔ invalid JSON, unsupported types and oversized payloads are rejected (5.799524ms)
-✔ GPA bounds, missing GPA, HTML input and fractional study year fail validation (0.610205ms)
-✔ eligibility rejects expired scholarship, missing profile and low GPA (0.840137ms)
-✔ complete happy path persists profile, saved item, checklist and submitted application (51.903274ms)
-✔ retries create neither duplicate bookmarks nor duplicate applications (13.119051ms)
-✔ incomplete checklist and missing acknowledgement prevent submission (13.70755ms)
-✔ owner isolation prevents reading and editing another user checklist (9.893307ms)
-✔ SQL-looking names are parameter values and cannot drop tables (3.18207ms)
-✔ deleting saved scholarship cascades checklist (7.37464ms)
-✔ account deletion is explicit and cascades all owned business records (7.67051ms)
-✔ partner success strips student names and emails; records real outcome metadata (2.553479ms)
-✔ upstream 503 is reported honestly; application system remains available (11.220805ms)
-✔ malformed upstream response and network failure never become successful integration (1.25398ms)
-✔ persistent per-user write limit returns 429 (45.868436ms)
-✔ partner bearer token is sent server-to-server and never appears in result or database log (3.411796ms)
-✔ submitted application locks document checklist on the server (11.008671ms)
-ℹ tests 19
+✔ catalog is explicitly fictional and browseable without authentication (6.341243ms)
+✔ anonymous write is rejected with 401 (2.682858ms)
+✔ cross-origin write is rejected before database mutation (2.066073ms)
+✔ invalid JSON, unsupported types and oversized payloads are rejected (3.899492ms)
+✔ GPA bounds, missing GPA, HTML input and fractional study year fail validation (0.616774ms)
+✔ eligibility rejects expired scholarship, missing profile and low GPA (0.407784ms)
+✔ complete happy path persists profile, saved item, checklist and submitted application (24.133825ms)
+✔ retries create neither duplicate bookmarks nor duplicate applications (13.38722ms)
+✔ incomplete checklist and missing acknowledgement prevent submission (9.918997ms)
+✔ owner isolation prevents reading and editing another user checklist (11.024397ms)
+✔ SQL-looking names are parameter values and cannot drop tables (2.262024ms)
+✔ deleting saved scholarship cascades checklist (5.733166ms)
+✔ account deletion is explicit and cascades all owned business records (9.622078ms)
+✔ partner success strips student names and emails; records real outcome metadata (2.720344ms)
+✔ upstream 503 is reported honestly; application system remains available (13.939644ms)
+✔ malformed upstream response and network failure never become successful integration (1.885245ms)
+✔ persistent per-user write limit returns 429 (42.519918ms)
+✔ partner bearer token is sent server-to-server and never appears in result or database log (2.34684ms)
+✔ submitted application locks document checklist on the server (6.62265ms)
+✔ registration stores salted peppered password hashes and only a hash of the session token (43.203271ms)
+✔ login succeeds with correct password and rejects wrong/nonexistent credentials (104.065797ms)
+✔ sessions expire, unknown tokens and forged identity headers do not grant a session (18.944431ms)
+✔ logout deletes current server session and expires browser cookie (22.67012ms)
+✔ cross-origin authentication, short passwords, insecure remote transport and disabled registration fail closed (2.952077ms)
+✔ changing pepper changes derived hash; missing pepper cannot create accounts (31.782677ms)
+✔ duplicate usernames do not create duplicate accounts (18.229956ms)
+✔ authentication rate limit applies before password hashing (162.472005ms)
+✔ partner endpoint requires its own bearer key and returns correlation evidence without private data (3.218308ms)
+✔ partner missing config fails closed and non-GET requests cannot mutate business data (1.26111ms)
+ℹ tests 29
 ℹ suites 0
-ℹ pass 19
+ℹ pass 29
 ℹ fail 0
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 346.756339
+ℹ duration_ms 513.674991

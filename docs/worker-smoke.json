@@ -1,0 +1,77 @@
+{
+  "tested_at": "2026-11-09T14:13:37.257Z",
+  "runtime": "Miniflare / workerd + actual built Worker + D1",
+  "passed": true,
+  "observations": [
+    {
+      "path": "auth/register",
+      "method": "POST",
+      "http_status": 201
+    },
+    {
+      "path": "profile",
+      "method": "POST",
+      "http_status": 200
+    },
+    {
+      "path": "saved",
+      "method": "POST",
+      "http_status": 201
+    },
+    {
+      "path": "state",
+      "method": "GET",
+      "http_status": 200
+    },
+    {
+      "path": "checklist",
+      "method": "PATCH",
+      "http_status": 200
+    },
+    {
+      "path": "checklist",
+      "method": "PATCH",
+      "http_status": 200
+    },
+    {
+      "path": "checklist",
+      "method": "PATCH",
+      "http_status": 200
+    },
+    {
+      "path": "applications",
+      "method": "POST",
+      "http_status": 201
+    },
+    {
+      "path": "applications",
+      "method": "POST",
+      "http_status": 200
+    },
+    {
+      "path": "partner/scholarships",
+      "method": "GET",
+      "http_status": 200
+    },
+    {
+      "path": "auth/logout",
+      "method": "POST",
+      "http_status": 200
+    },
+    {
+      "path": "state",
+      "method": "GET",
+      "http_status": 401
+    },
+    {
+      "path": "auth/login",
+      "method": "POST",
+      "http_status": 200
+    },
+    {
+      "path": "state",
+      "method": "GET",
+      "http_status": 200
+    }
+  ]
+}

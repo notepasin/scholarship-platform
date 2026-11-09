@@ -1,0 +1,6 @@
+# Generate AUTH_PEPPER using npm run setup; never commit the real .dev.vars.
+AUTH_PEPPER="replace-with-at-least-32-random-characters"
+# Add only after receiving an authorized credential from Team 03.
+ENROLLMENT_BEARER_TOKEN=""
+# Optional bearer key for GET /api/partner/scholarships.
+PARTNER_API_KEY=""
